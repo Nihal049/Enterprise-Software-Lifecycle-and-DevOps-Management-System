@@ -16,7 +16,7 @@ import Repos from './pages/Repos';
 import ActivityLogs from './pages/ActivityLogs';
 import Settings from './pages/Settings';
 import Team from './pages/Team';
-import AIAssistant from './pages/AIAssistant'; // <-- IMPORTED AI ASSISTANT
+import AIAssistant from './pages/AIAssistant';
 
 // --- RBAC: JWT DECODER UTILITY ---
 // eslint-disable-next-line react-refresh/only-export-components

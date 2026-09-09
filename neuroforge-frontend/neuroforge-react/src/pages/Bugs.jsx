@@ -52,7 +52,6 @@ export default function Bugs() {
         api.get('/test-cases').catch(() => ({ data: [] }))
       ]);
 
-      // RESTORED: Safe array fallback to prevent crashes
       setBugs(Array.isArray(bugsRes.data) ? bugsRes.data : []);
       setTeamMembers(Array.isArray(usersRes.data) ? usersRes.data : []);
       setTestCases(Array.isArray(testCasesRes.data) ? testCasesRes.data : []);
@@ -89,7 +88,7 @@ export default function Bugs() {
 
       const response = await api.post('/bugs', payload);
 
-      setBugs([response.data, ...bugs]); // Add new bugs to the top of the list
+      setBugs([response.data, ...bugs]);
       setTitle('');
       setDescription('');
       setSeverity('Medium');
@@ -100,7 +99,6 @@ export default function Bugs() {
     }
   };
 
-  // --- RESTORED: BULLETPROOF UPDATE FALLBACK ---
   const handleStatusChange = async (bugId, newStatus) => {
     const fullBug = bugs.find(b => (b.bugId || b.id) === bugId);
     if (!fullBug) return;
@@ -123,7 +121,6 @@ export default function Bugs() {
     }
   };
 
-  // --- RESTORED: DEVOPS DELETE FUNCTIONALITY ---
   const handleDeleteBug = async (bugId) => {
     if (!window.confirm("Are you sure you want to delete this defect permanently?")) return;
     try {

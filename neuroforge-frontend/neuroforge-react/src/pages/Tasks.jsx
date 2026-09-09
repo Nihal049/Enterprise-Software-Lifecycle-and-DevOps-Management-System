@@ -3,6 +3,7 @@ import { Plus, Search, X, Edit2, GripVertical, User, Loader2, Trash2, ClipboardL
 import api from '../api/axios';
 import { getAuthUser } from '../App'; 
 import { useSearchParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 // --- VIBRANT, ANIMATED STAT CARD ---
 const StatCard = ({ title, value, subtext, icon: Icon, gradientFrom, gradientTo, shadowColor }) => (
@@ -146,15 +147,33 @@ export default function Tasks() {
     }
   };
 
-  const handleDeleteTask = async (taskId) => {
-    if (!window.confirm("Are you sure you want to delete this task?")) return;
-    try {
-      await api.delete(`/tasks/${taskId}`);
-      setTasks(tasks.filter(t => (t.taskId || t.id) !== taskId));
-    // eslint-disable-next-line no-unused-vars
-    } catch (err) {
-      alert("Failed to delete task.");
-    }
+  const handleDeleteTask = (id) => {
+    Swal.fire({
+      title: 'Delete this task?',
+      text: "This cannot be undone and will remove it from the sprint.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444', 
+      cancelButtonColor: '#94a3b8', 
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      showClass: {
+        popup: 'animate__animated animate__fadeInDown animate__faster'
+      },
+      hideClass: {
+        popup: 'animate__animated animate__fadeOutUp animate__faster'
+      }
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await api.delete(`/tasks/${id}`);
+          setTasks(tasks.filter(t => (t.taskId || t.id) !== id));
+          Swal.fire('Deleted!', 'The task has been removed.', 'success');
+        } catch (error) {
+          Swal.fire('Error!', 'Something went wrong.', 'error');
+        }
+      }
+    });
   };
 
   const handleDragStart = (e, taskId) => e.dataTransfer.setData('taskId', taskId);

@@ -3,6 +3,7 @@ import { Search, Loader2, Bug, GitCommit, Rocket, FileCheck2, Clock, Folder, Che
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { getAuthUser } from '../App';
+import Swal from 'sweetalert2';
 
 // --- UPGRADED: VIBRANT, ANIMATED STAT CARD ---
 const StatCard = ({ title, value, subtext, icon: Icon, gradientFrom, gradientTo, shadowColor }) => (
@@ -220,16 +221,34 @@ export default function Dashboard() {
     }
   };
 
-  const handleDeleteProject = async (projectId) => {
-    if (!window.confirm("Are you sure you want to delete this project? This may fail if tasks or sprints are attached.")) return;
-    try {
-      await api.delete(`/projects/${projectId}`);
-      setProjects(projects.filter(p => (p.projectId || p.id) !== projectId));
-      setMetrics(prev => ({ ...prev, activeProjects: prev.activeProjects - 1 }));
-    // eslint-disable-next-line no-unused-vars
-    } catch (err) {
-      alert("Failed to delete project. Please remove attached sprints or tasks first.");
-    }
+  const handleDeleteProject = (id) => {
+    Swal.fire({
+      title: 'Delete this project?',
+      text: "This cannot be undone and will remove all associated tasks.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444', 
+      cancelButtonColor: '#94a3b8', 
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      showClass: {
+        popup: 'animate__animated animate__fadeInDown animate__faster'
+      },
+      hideClass: {
+        popup: 'animate__animated animate__fadeOutUp animate__faster'
+      }
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await api.delete(`/projects/${id}`);
+          setProjects(projects.filter(p => (p.projectId || p.id) !== id));
+          setMetrics(prev => ({ ...prev, activeProjects: prev.activeProjects - 1 }));
+          Swal.fire('Deleted!', 'The project has been removed.', 'success');
+        } catch (error) {
+          Swal.fire('Error!', 'Could not delete project. It might have active tasks attached.', 'error');
+        }
+      }
+    });
   };
 
   const formatTimeAgo = (date) => {

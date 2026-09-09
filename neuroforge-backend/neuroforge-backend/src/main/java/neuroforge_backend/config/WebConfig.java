@@ -9,7 +9,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // This opens up every single /api/ endpoint to the outside world
         registry.addMapping("/api/**")
                 .allowedOrigins("*") // Allows requests from any frontend (HTML files, React, etc.)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allows all our CRUD operations
