@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Loader2, Users, UserCheck, Shield, UserPlus, Trash2, Mail, Key, ShieldAlert, Check } from 'lucide-react';
 import api from '../api/axios';
 import { getAuthUser } from '../App';
+import Swal from 'sweetalert2';
 
 const StatCard = ({ title, value, subtext, icon: Icon, gradientFrom, gradientTo, shadowColor }) => (
   <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-lg transition-all duration-300 relative overflow-hidden group">
@@ -52,7 +53,7 @@ export default function Team() {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('/users', {
+      await api.post('/users', {
         name: newUser.name,
         email: newUser.email,
         password: newUser.password,
@@ -60,28 +61,56 @@ export default function Team() {
         role: { roleId: parseInt(newUser.roleId) }
       });
 
-      setUsers([response.data, ...users]);
+      // Force a fresh fetch so roleNames are completely loaded, preventing crashes!
+      await fetchUsers();
+      
       setIsModalOpen(false);
       setNewUser({ name: '', email: '', password: '', status: 'Active', roleId: 2 });
-    // eslint-disable-next-line no-unused-vars
     } catch (err) {
-      alert("Failed to create user. Ensure Role ID exists in your database.");
+      Swal.fire('Error!', 'Failed to create user. Ensure the selected Role ID exists in your backend database.', 'error');
     }
   };
 
-  const handleDeleteUser = async (id) => {
-    if (!window.confirm("Are you sure you want to remove this team member?")) return;
-    try {
-      await api.delete(`/users/${id}`);
-      setUsers(users.filter(u => (u.userId || u.id) !== id));
-    // eslint-disable-next-line no-unused-vars
-    } catch (err) {
-      alert("Failed to delete. They might have tasks assigned to them.");
-    }
+  const handleDeleteUser = (id) => {
+    Swal.fire({
+      title: 'Remove this team member?',
+      text: "This cannot be undone and may affect assigned tasks.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444', 
+      cancelButtonColor: '#94a3b8', 
+      confirmButtonText: 'Yes, remove them!',
+      cancelButtonText: 'Cancel',
+      showClass: {
+        popup: 'animate__animated animate__fadeInDown animate__faster'
+      },
+      hideClass: {
+        popup: 'animate__animated animate__fadeOutUp animate__faster'
+      }
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await api.delete(`/users/${id}`);
+          setUsers(users.filter(u => (u.userId || u.id) !== id));
+          Swal.fire('Removed!', 'The team member has been removed.', 'success');
+        } catch (error) {
+          Swal.fire('Error!', 'Could not remove user. They might have active tasks assigned to them.', 'error');
+        }
+      }
+    });
   };
 
-  const devOpsCount = users.filter(user => (user.role?.roleName || '').toLowerCase() === 'devops engineer').length;
-  const developerCount = users.filter(user => (user.role?.roleName || '').toLowerCase() !== 'devops engineer').length;
+  const devOpsCount = users.filter(user => {
+    const roleName = (user.role && user.role.roleName) ? user.role.roleName : '';
+    return roleName.toLowerCase() === 'devops engineer';
+  }).length;
+
+  const developerCount = users.filter(user => {
+    const roleName = (user.role && user.role.roleName) ? user.role.roleName : '';
+    // UPDATED: Now specifically counts Developers instead of just "Not DevOps"
+    return roleName.toLowerCase() === 'developer';
+  }).length;
+
   const activeCount = users.filter(user => user.status === 'Active').length;
 
   if (loading) {
@@ -115,11 +144,10 @@ export default function Team() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard title="Total Members" value={users.length} subtext="Registered users" icon={Users} gradientFrom="from-blue-400" gradientTo="to-blue-500" shadowColor="shadow-blue-200" />
         <StatCard title="Active Members" value={activeCount} subtext="Currently active" icon={UserCheck} gradientFrom="from-emerald-400" gradientTo="to-emerald-500" shadowColor="shadow-emerald-200" />
-        <StatCard title="Developers" value={developerCount} subtext="Development team" icon={UserPlus} gradientFrom="from-purple-400" gradientTo="to-purple-500" shadowColor="shadow-purple-200" />
+        <StatCard title="Developers" value={developerCount} subtext="Standard Development team" icon={UserPlus} gradientFrom="from-purple-400" gradientTo="to-purple-500" shadowColor="shadow-purple-200" />
         <StatCard title="DevOps Engineers" value={devOpsCount} subtext="Platform administrators" icon={Shield} gradientFrom="from-amber-400" gradientTo="to-amber-500" shadowColor="shadow-amber-200" />
       </div>
 
-      {/* New Enterprise Table UI */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -139,7 +167,8 @@ export default function Team() {
               ) : (
                 users.map((user) => {
                   const safeId = user.userId || user.id;
-                  const roleName = user.role ? user.role.roleName : 'No Role';
+                  
+                  const roleName = (user.role && user.role.roleName) ? user.role.roleName : 'Developer';
                   const isUserDevOps = roleName.toLowerCase() === 'devops engineer';
                   const initials = (user.name || user.email || '?').charAt(0).toUpperCase();
 
@@ -183,7 +212,6 @@ export default function Team() {
         </div>
       </div>
 
-      {/* Provision New User Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in zoom-in duration-200 p-4">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
@@ -202,7 +230,7 @@ export default function Team() {
                 <label className="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400"><Users size={18} /></div>
-                  <input type="text" required value={newUser.name} onChange={(e) => setNewUser({...newUser, name: e.target.value})} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="John Doe" />
+                  <input type="text" required value={newUser.name} onChange={(e) => setNewUser({...newUser, name: e.target.value})} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Name" />
                 </div>
               </div>
 
@@ -210,7 +238,7 @@ export default function Team() {
                 <label className="block text-sm font-bold text-slate-700 mb-1">Work Email</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400"><Mail size={18} /></div>
-                  <input type="email" required value={newUser.email} onChange={(e) => setNewUser({...newUser, email: e.target.value})} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="john@company.com" />
+                  <input type="email" required value={newUser.email} onChange={(e) => setNewUser({...newUser, email: e.target.value})} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Email" />
                 </div>
               </div>
 
@@ -225,10 +253,16 @@ export default function Team() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">System Role</label>
-                  <select value={newUser.roleId} onChange={(e) => setNewUser({...newUser, roleId: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-700">
-                    <option value="2">Developer</option>
-                    <option value="1">DevOps Engineer</option>
-                  </select>
+                  
+                  <select value={newUser.roleId} onChange={(e) => setNewUser({...newUser, roleId: e.target.value})} className="...">
+                      <option value="1">DevOps Engineer</option>
+                       <option value="2">Frontend Developer</option>
+                       <option value="3">QA Engineer</option>
+                       <option value="4">Admin</option>
+                       <option value="5">Business Analyst</option>
+                       <option value="6">Project Manager</option>
+                    </select>
+
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Status</label>

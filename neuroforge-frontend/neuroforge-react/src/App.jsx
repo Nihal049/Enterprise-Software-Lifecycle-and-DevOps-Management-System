@@ -75,10 +75,19 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const user = getAuthUser();
 
-  const handleLogout = () => {
-    localStorage.removeItem('jwt_token');
-    navigate('/login');
-  };
+  const handleLogout = (e) => {
+  e.preventDefault();
+  
+  // 1. Destroy the tokens and user data
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  
+  // 2. Optional: If you use sessionStorage, clear that too
+  sessionStorage.clear();
+  
+  // 3. Force a hard redirect to the login page so React state completely resets
+  window.location.href = '/login'; 
+};
 
   return (
     <div className="w-64 bg-slate-900 text-white h-screen flex flex-col fixed left-0 top-0 border-r border-slate-800 shadow-2xl z-50">
