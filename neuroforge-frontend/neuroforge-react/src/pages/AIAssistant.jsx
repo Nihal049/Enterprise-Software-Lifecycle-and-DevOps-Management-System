@@ -1,176 +1,122 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bot, User, Send, Sparkles, Terminal, Loader2, Zap, ShieldAlert, Rocket } from 'lucide-react';
+import { Send, Bot, User, Loader2, Sparkles, BrainCircuit } from 'lucide-react';
+import api from '../api/axios';
+import ReactMarkdown from 'react-markdown'; // Optional: Run `npm install react-markdown` to format the AI's code blocks
 
-export default function AIAssistant() {
+export default function AiCopilot() {
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState([
+    { role: 'ai', text: "Hello! I am the NeuroForge AI Copilot. I can help you analyze bugs, write Spring Boot controllers, or plan your next Agile sprint. What are we working on today?" }
+  ]);
   const messagesEndRef = useRef(null);
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'ai',
-      text: 'Hello! I am your NeuroForge Engineering Copilot. I can analyze sprint velocity, summarize critical defects, or trigger deployment pipelines. How can I help you today?'
-    }
-  ]);
-
-  const quickPrompts = [
-    { icon: ShieldAlert, text: "Summarize all open Critical defects", color: "text-red-400" },
-    { icon: Rocket, text: "Check staging deployment status", color: "text-purple-400" },
-    { icon: Zap, text: "Generate test cases for Auth API", color: "text-amber-400" }
-  ];
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // Auto-scroll to bottom of chat
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-  const handleSend = async (textToSend) => {
-    const query = textToSend || input;
-    if (!query.trim()) return;
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
 
-    // Add user message
-    // eslint-disable-next-line react-hooks/purity
-    const newUserMsg = { id: Date.now(), sender: 'user', text: query };
-    setMessages(prev => [...prev, newUserMsg]);
+    const userMsg = input.trim();
     setInput('');
-    setIsTyping(true);
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setIsLoading(true);
 
-    // Simulate AI thinking delay
-    // Simulate AI thinking delay
-        setTimeout(() => {
-          let aiResponse = "I'm sorry, I didn't quite catch that. I am currently optimized to analyze defects, deployments, and test cases. How else can I help?";
-          
-          const q = query.toLowerCase();
-
-          // Greetings
-          if (q.includes('hello') || q.includes('hi ') || q.includes('how are you')) {
-            aiResponse = "Hello! I am operating perfectly. How can I assist you with your NeuroForge workspace today?";
-          } 
-          // Team inquiries
-          else if (q.includes('team') || q.includes('member') || q.includes('users')) {
-            aiResponse = "I don't have direct access to list all team members in this chat interface right now. Please check the 'Team Management' tab in your sidebar to view the active roster.";
-          }
-          // The Original Project Commands
-          else if (q.includes('defect') || q.includes('critical') || q.includes('bug')) {
-            aiResponse = "You currently have 2 Critical defects open. DEF-42 (JWT Token Expiry) is unassigned, and DEF-18 (Database Connection Pool) is In Progress by the backend team.";
-          } 
-          else if (q.includes('deploy') || q.includes('staging') || q.includes('pipeline')) {
-            aiResponse = "The latest deployment to Staging (RUN-88) was successful 45 minutes ago. No anomalies detected in the logs.";
-          } 
-          else if (q.includes('test') || q.includes('qa')) {
-            aiResponse = "I have generated 4 boundary test cases for the Auth API. You can view and execute them in the Test Cases module.";
-          }
-
-          const newAiMsg = { id: Date.now() + 1, sender: 'ai', text: aiResponse };
-          setMessages(prev => [...prev, newAiMsg]);
-          setIsTyping(false);
-        }, 1500);
+    try {
+      // Call our secure Spring Boot endpoint
+      const response = await api.post('/ai/ask', { prompt: userMsg });
+      
+      setMessages(prev => [...prev, { 
+        role: 'ai', 
+        text: response.data.reply 
+      }]);
+    } catch (error) {
+      setMessages(prev => [...prev, { 
+        role: 'ai', 
+        text: "⚠️ Connection error. Please ensure the Spring Boot backend is running and the API key is configured." 
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="p-8 max-w-5xl mx-auto animate-in fade-in duration-500 min-h-screen flex flex-col">
-      
-      <header className="mb-8 border-b border-slate-200 pb-4 flex items-end justify-between shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
-            <Sparkles className="text-blue-600" size={28} />
-            NeuroForge Copilot
-          </h1>
-          <p className="text-slate-500 mt-1 text-sm">Your intelligent DevOps and engineering assistant</p>
+      <header className="mb-6 shrink-0">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md">
+            <Sparkles size={11} /> Artificial Intelligence
+          </span>
         </div>
-        <div className="hidden sm:flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-100 text-xs font-bold uppercase tracking-wider">
-          <Terminal size={14} /> System Online
-        </div>
+        <h1 className="text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
+          <BrainCircuit className="text-indigo-600" size={28} />
+          NeuroForge Copilot
+        </h1>
+        <p className="text-slate-500 mt-1 text-sm">Your enterprise SDLC assistant powered by Gemini 1.5</p>
       </header>
 
-      <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden relative">
-        
-        {/* Chat History Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-50/50">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex gap-4 max-w-[85%] ${msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
-              
-              {/* Avatar */}
-              <div className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center shadow-sm ${
-                msg.sender === 'user' 
-                  ? 'bg-slate-800 text-white' 
-                  : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white'
+      <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden mb-8 min-h-[500px]">
+        {/* Chat History */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 custom-scrollbar">
+          {messages.map((msg, idx) => (
+            <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-indigo-100 text-indigo-600'
               }`}>
-                {msg.sender === 'user' ? <User size={16} /> : <Bot size={16} />}
+                {msg.role === 'user' ? <User size={16} /> : <Bot size={18} />}
               </div>
-
-              {/* Message Bubble */}
-              <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                msg.sender === 'user'
-                  ? 'bg-slate-800 text-white rounded-tr-sm'
-                  : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm'
+              <div className={`px-5 py-3.5 rounded-2xl max-w-[80%] text-sm leading-relaxed shadow-sm ${
+                msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-none'
               }`}>
-                {msg.text}
+                {/* Using ReactMarkdown to format code blocks and bold text */}
+                {msg.role === 'user' ? (
+                  msg.text
+                ) : (
+                  <div className="prose prose-sm prose-slate max-w-none">
+                     <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  </div>
+                )}
               </div>
             </div>
           ))}
-
-          {isTyping && (
-            <div className="flex gap-4 max-w-[85%]">
-              <div className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center shadow-sm bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
-                <Bot size={16} />
+          
+          {isLoading && (
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                <Bot size={18} />
               </div>
-              <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-4 flex items-center gap-2 shadow-sm">
-                <Loader2 size={16} className="text-blue-500 animate-spin" />
-                <span className="text-sm font-medium text-slate-400">Analyzing workspace...</span>
+              <div className="px-5 py-4 rounded-2xl bg-white border border-slate-200 rounded-tl-none flex items-center gap-2 shadow-sm">
+                <Loader2 size={16} className="animate-spin text-indigo-600" />
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Processing...</span>
               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
-        <div className="p-6 bg-white border-t border-slate-100">
-          
-          {/* Quick Prompts */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {quickPrompts.map((prompt, idx) => {
-              const Icon = prompt.icon;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => handleSend(prompt.text)}
-                  disabled={isTyping}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 transition-colors disabled:opacity-50"
-                >
-                  <Icon size={12} className={prompt.color} />
-                  {prompt.text}
-                </button>
-              );
-            })}
-          </div>
-
-          <form 
-            onSubmit={(e) => { e.preventDefault(); handleSend(); }} 
-            className="relative flex items-center"
-          >
+        {/* Input Box */}
+        <div className="p-4 bg-white border-t border-slate-100">
+          <form onSubmit={handleSend} className="relative flex items-center">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              disabled={isTyping}
-              placeholder="Ask Copilot to analyze defects, check pipelines, or generate tasks..."
-              className="w-full pl-4 pr-14 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all text-sm text-slate-800 disabled:opacity-60"
+              placeholder="Ask Copilot to analyze a stack trace, write a query, or define sprint goals..."
+              disabled={isLoading}
+              className="w-full pl-5 pr-14 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all text-sm font-medium text-slate-800 disabled:opacity-50"
             />
             <button
               type="submit"
-              disabled={!input.trim() || isTyping}
-              className="absolute right-2 w-10 h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading || !input.trim()}
+              className="absolute right-2 w-10 h-10 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-lg flex items-center justify-center transition-colors"
             >
-              <Send size={18} className="ml-1" />
+              <Send size={18} className={input.trim() && !isLoading ? 'translate-x-[-1px] translate-y-[1px]' : ''} />
             </button>
           </form>
         </div>
-
       </div>
     </div>
   );

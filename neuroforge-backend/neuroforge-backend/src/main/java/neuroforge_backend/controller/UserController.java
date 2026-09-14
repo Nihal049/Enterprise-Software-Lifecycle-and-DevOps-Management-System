@@ -3,7 +3,6 @@ package neuroforge_backend.controller;
 import neuroforge_backend.entity.User;
 import neuroforge_backend.repository.UserRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.password.PasswordEncoder; // <-- ADDED IMPORT
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -12,11 +11,9 @@ import java.util.List;
 public class UserController {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserController(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping
@@ -26,8 +23,7 @@ public class UserController {
 
     @PostMapping
     public User createUser(@RequestBody User user) {
-        // ENCRYPT PASSWORD BEFORE SAVING!
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // Saves raw plain-text password directly
         return userRepository.save(user);
     }
 
@@ -42,9 +38,9 @@ public class UserController {
             existingUser.setRole(userDetails.getRole());
         }
 
-        // ENCRYPT PASSWORD IF IT IS BEING UPDATED!
+        // Saves raw plain-text password directly
         if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+            existingUser.setPassword(userDetails.getPassword());
         }
 
         return userRepository.save(existingUser);

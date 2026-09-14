@@ -7,6 +7,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import io.jsonwebtoken.ExpiredJwtException; // <-- ADDED THIS IMPORT
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,7 +39,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // 2. Check if the header contains a Bearer token
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7); // Cut off "Bearer " to get just the token
-            email = jwtUtil.extractUsername(jwt);   // Decode the token to get the user's email
+
+            // <-- FIX: CATCH THE EXPIRED TOKEN CRASH HERE
+            try {
+                email = jwtUtil.extractUsername(jwt);   // Decode the token to get the user's email
+            } catch (ExpiredJwtException e) {
+                System.out.println("Dead token caught and ignored. Forcing user to log in again.");
+            } catch (Exception e) {
+                System.out.println("Invalid token caught and ignored.");
+            }
         }
 
         // 3. If we found an email, let's validate it!
