@@ -25,30 +25,32 @@ public class DatabaseSeeder implements CommandLineRunner {
         try {
             System.out.println("🔍 === LOCAL DATABASE DIAGNOSTIC === 🔍");
             List<User> users = userRepository.findAll();
+            boolean alexExists = false;
 
-            if (users.isEmpty()) {
-                System.out.println("⚠️ WARNING: Your local users table is completely empty. Seeding default user...");
+            System.out.println("✅ Found existing users. Here are their exact emails:");
+            for (User u : users) {
+                System.out.println(" -> " + u.getEmail());
                 
-                User admin = new User();
-                admin.setName("Alex Senior"); // Required by nullable=false
-                admin.setEmail("alex.senior@neuroforge.local"); // Required by nullable=false
-                admin.setPassword(passwordEncoder.encode("admin123")); // Required by nullable=false
-                
-                userRepository.save(admin);
-                System.out.println("✅ SUCCESS: Created default user -> alex.senior@neuroforge.local / admin123");
-            } else {
-                System.out.println("✅ Found existing users. Here are their exact emails:");
-                for (User u : users) {
-                    System.out.println(" -> " + u.getEmail());
-
-                    // Force reset the password for Alex just in case you forgot it
-                    if (u.getEmail().contains("alex.senior")) {
-                        u.setPassword(passwordEncoder.encode("admin123"));
-                        userRepository.save(u);
-                        System.out.println("✅ SUCCESS: Reset password for " + u.getEmail() + " to 'admin123'");
-                    }
+                // If Alex exists, just reset the password
+                if (u.getEmail().equals("alex.senior@neuroforge.local")) {
+                    alexExists = true;
+                    u.setPassword(passwordEncoder.encode("admin123"));
+                    userRepository.save(u);
+                    System.out.println("✅ SUCCESS: Reset password for " + u.getEmail() + " to 'admin123'");
                 }
             }
+
+            // If Alex DOES NOT exist, create him right now
+            if (!alexExists) {
+                System.out.println("⚠️ Alex not found. Creating default user...");
+                User admin = new User();
+                admin.setName("Alex Senior");
+                admin.setEmail("alex.senior@neuroforge.local");
+                admin.setPassword(passwordEncoder.encode("admin123"));
+                userRepository.save(admin);
+                System.out.println("✅ SUCCESS: Created default user -> alex.senior@neuroforge.local / admin123");
+            }
+            
             System.out.println("===========================================");
         } catch (Exception e) {
             System.out.println("⏳ Diagnostics failed to run: " + e.getMessage());
