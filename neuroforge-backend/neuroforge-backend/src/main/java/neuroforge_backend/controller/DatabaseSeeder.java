@@ -1,12 +1,13 @@
 package neuroforge_backend.config;
 
-import neuroforge_backend.entity.User;
-import neuroforge_backend.repository.UserRepository;
+import java.util.List;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import neuroforge_backend.entity.User;
+import neuroforge_backend.repository.UserRepository;
 
 @Component
 public class DatabaseSeeder implements CommandLineRunner {
@@ -26,7 +27,15 @@ public class DatabaseSeeder implements CommandLineRunner {
             List<User> users = userRepository.findAll();
 
             if (users.isEmpty()) {
-                System.out.println("⚠️ WARNING: Your local users table is completely empty!");
+                System.out.println("⚠️ WARNING: Your local users table is completely empty. Seeding default user...");
+                
+                User admin = new User();
+                admin.setName("Alex Senior"); // Required by nullable=false
+                admin.setEmail("alex.senior@neuroforge.local"); // Required by nullable=false
+                admin.setPassword(passwordEncoder.encode("admin123")); // Required by nullable=false
+                
+                userRepository.save(admin);
+                System.out.println("✅ SUCCESS: Created default user -> alex.senior@neuroforge.local / admin123");
             } else {
                 System.out.println("✅ Found existing users. Here are their exact emails:");
                 for (User u : users) {
@@ -42,7 +51,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             }
             System.out.println("===========================================");
         } catch (Exception e) {
-            System.out.println("⏳ Diagnostics failed to run.");
+            System.out.println("⏳ Diagnostics failed to run: " + e.getMessage());
         }
     }
 }
