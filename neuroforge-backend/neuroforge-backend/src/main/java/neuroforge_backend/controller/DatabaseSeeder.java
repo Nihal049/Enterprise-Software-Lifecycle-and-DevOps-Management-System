@@ -6,7 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 public class DatabaseSeeder implements CommandLineRunner {
@@ -14,7 +14,6 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // Injecting YOUR app's exact encoder instead of guessing
     public DatabaseSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -23,28 +22,27 @@ public class DatabaseSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) {
         try {
-            //userRepository.deleteAll();
+            System.out.println("🔍 === LOCAL DATABASE DIAGNOSTIC === 🔍");
+            List<User> users = userRepository.findAll();
 
-            User admin = new User();
-            admin.setName("System Admin");
-            admin.setEmail("admin@neuroforge.com");
+            if (users.isEmpty()) {
+                System.out.println("⚠️ WARNING: Your local users table is completely empty!");
+            } else {
+                System.out.println("✅ Found existing users. Here are their exact emails:");
+                for (User u : users) {
+                    System.out.println(" -> " + u.getEmail());
 
-            // This is the fix. It encrypts using your SecurityConfig settings.
-            admin.setPassword(passwordEncoder.encode("admin123"));
-
-            admin.setStatus("ACTIVE");
-            admin.setCreatedAt(LocalDateTime.now());
-
-            userRepository.save(admin);
-
-            System.out.println("✅ ==========================================");
-            System.out.println("✅ PERFECT ADMIN CREATED WITH NATIVE ENCODER");
-            System.out.println("✅ Email: admin@neuroforge.com");
-            System.out.println("✅ Password: admin123");
-            System.out.println("✅ ==========================================");
+                    // Force reset the password for Alex just in case you forgot it
+                    if (u.getEmail().contains("alex.senior")) {
+                        u.setPassword(passwordEncoder.encode("admin123"));
+                        userRepository.save(u);
+                        System.out.println("✅ SUCCESS: Reset password for " + u.getEmail() + " to 'admin123'");
+                    }
+                }
+            }
+            System.out.println("===========================================");
         } catch (Exception e) {
-            System.out.println("⏳ SEEDER FAILED TO RUN.");
-            e.printStackTrace();
+            System.out.println("⏳ Diagnostics failed to run.");
         }
     }
 }

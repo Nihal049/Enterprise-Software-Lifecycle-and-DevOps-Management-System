@@ -93,9 +93,8 @@ const Sidebar = () => {
     <div className="w-64 bg-slate-900 text-white h-screen flex flex-col fixed left-0 top-0 border-r border-slate-800 shadow-2xl z-50">
       <div className="p-6 mb-2">
         <h1 className="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
-          NeuroForge
+          Enterprise ALM
         </h1>
-        <p className="text-slate-500 text-xs mt-1 font-mono tracking-widest uppercase">Enterprise ALM</p>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">

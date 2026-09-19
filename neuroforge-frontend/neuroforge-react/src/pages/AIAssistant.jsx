@@ -7,7 +7,7 @@ export default function AiCopilot() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'ai', text: "Hello! I am the NeuroForge AI Copilot. I can help you analyze bugs, write Spring Boot controllers, or plan your next Agile sprint. What are we working on today?" }
+    { role: 'ai', text: "Hello! I am the AI Copilot. I can help you analyze bugs, write Spring Boot controllers, or plan your next Agile sprint. What are we working on today?" }
   ]);
   const messagesEndRef = useRef(null);
 
@@ -53,7 +53,7 @@ export default function AiCopilot() {
         </div>
         <h1 className="text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
           <BrainCircuit className="text-indigo-600" size={28} />
-          NeuroForge Copilot
+          AI Copilot
         </h1>
         <p className="text-slate-500 mt-1 text-sm">Your enterprise SDLC assistant powered by Gemini 1.5</p>
       </header>

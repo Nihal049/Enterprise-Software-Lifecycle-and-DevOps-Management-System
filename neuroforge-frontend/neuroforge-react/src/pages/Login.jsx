@@ -62,7 +62,7 @@ export default function Login() {
                 <ShieldCheck size={34} className="text-blue-300" strokeWidth={2} />
               </div>
               <div>
-                <h1 className="text-3xl font-extrabold tracking-tight">NeuroForge</h1>
+                <h1 className="text-3xl font-extrabold tracking-tight">Enterprise Software Lifecycle and DevOps Management System</h1>
                 <p className="text-sm text-slate-400 mt-1">Engineering Control Center</p>
               </div>
             </div>
@@ -102,7 +102,7 @@ export default function Login() {
           </div>
 
           <div className="relative z-10 pt-10">
-            <p className="text-[10px] uppercase tracking-widest font-bold text-slate-500">NeuroForge Workspace</p>
+            <p className="text-[10px] uppercase tracking-widest font-bold text-slate-500">Workspace</p>
             <p className="text-xs text-slate-600 mt-1">Secure engineering operations platform</p>
           </div>
         </div>

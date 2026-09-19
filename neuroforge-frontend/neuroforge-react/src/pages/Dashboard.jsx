@@ -274,7 +274,7 @@ export default function Dashboard() {
     <div className="p-8 max-w-7xl mx-auto animate-in fade-in duration-500 bg-slate-50/50 min-h-screen">
       <header className="mb-8 flex justify-between items-end border-b border-gray-200 pb-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">NeuroForge Dashboard</h1>
+          <h1 className="text-3xl font-bold text-slate-800">Dashboard</h1>
           <p className="text-slate-500 mt-1 text-sm">Welcome to the Enterprise SDLC Platform</p>
         </div>
         
